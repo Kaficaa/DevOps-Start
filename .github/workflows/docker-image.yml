@@ -1,4 +1,4 @@
-name: CI/CD - Automatization
+name: CI/CD Automatization
 
 on:
   push:

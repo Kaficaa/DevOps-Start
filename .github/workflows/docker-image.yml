@@ -1,8 +1,8 @@
-name: CI/CD GitHub Actions
+name: CI/CD GitHub Actions - Automatization
 
 on:
   push:
-    branches: [ "devops-no-k8s" ]
+    branches: [ "main" ]
 
 jobs:
   build-and-push:

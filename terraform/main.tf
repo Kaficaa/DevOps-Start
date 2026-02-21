@@ -101,6 +101,11 @@ resource "azurerm_lb_rule" "lb_rule" {
   backend_address_pool_ids       = [azurerm_lb_backend_address_pool.backend_pool.id]
 }
 
+import {
+  to = azurerm_log_analytics_workspace.logs
+  id = "/subscriptions/${var.subscription_id}/resourceGroups/DevOps-Start/providers/Microsoft.OperationalInsights/workspaces/devops-logs-workspace"
+}
+
 resource "azurerm_log_analytics_workspace" "logs" {
   name                = "devops-logs-workspace"
   location            = azurerm_resource_group.my_rg.location

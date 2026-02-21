@@ -1,0 +1,42 @@
+name: CI/CD GitHub Actions
+
+on:
+  push:
+    branches: [ "devops-no-k8s" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Azure Container Registry Login
+      uses: Azure/docker-login@v1
+      with:
+        login-server: ${{ secrets.AZURE_REGISTRY_SERVER }}
+        username: ${{ secrets.AZURE_REGISTRY_USERNAME }}
+        password: ${{ secrets.AZURE_REGISTRY_PASSWORD }}
+
+    - name: Build and Push
+      run: |
+        docker build . --file Dockerfile --tag ${{ secrets.AZURE_REGISTRY_SERVER }}/my-image-name:${{ github.sha }}
+        docker push ${{ secrets.AZURE_REGISTRY_SERVER }}/my-image-name:${{ github.sha }}
+        
+  terraform-deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init & Apply
+        run: |
+          terraform init
+          terraform apply -auto-approve -parallelism=1 -var="container_image_tag=${{ github.sha }}" -var="registry_password=${{ secrets.AZURE_REGISTRY_PASSWORD }}" -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+        working-directory: ./terraform
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
